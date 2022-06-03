@@ -68,23 +68,13 @@
       fetch(`/api/tweets/?query=${searchText}`)
         .then(res => {
           if (res.ok) {
-            return res.json();
+            return res.text();
           }
 
           throw new Error('Internal Server Error');
         })
         .then(tweets => {
           console.log(tweets);
-
-          let tweetHTML = '';
-
-          tweets.forEach(tweet => {
-            tweetHTML += `
-
-            `;
-          });
-
-          tweets.append(tweetHTML);
         })
         .catch(error => {
           errorDiv.style.display = 'block';

@@ -16,7 +16,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 //import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 //import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.search.Query;
+//import org.apache.lucene.search.Query;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.json.simple.parser.JSONParser;
@@ -78,9 +78,6 @@ public class TweetController {
 
     @RequestMapping("/tweets")
     public String index(@RequestParam(required = false, defaultValue = "") String query) {
-        Analyzer analyzer = new StandardAnalyzer();
-        String[] fields = {"text"};
-
         //MultiFieldQueryParser parser = new MultiFieldQueryParser(fields, analyzer);
         //Query myQuery = parser.parse(query);
 

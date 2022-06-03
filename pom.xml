@@ -47,9 +47,9 @@
 
 		<!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-queryparser -->
 		<dependency>
-				<groupId>org.apache.lucene</groupId>
-				<artifactId>lucene-queryparser</artifactId>
-				<version>8.11.1</version>
+						<groupId>org.apache.lucene</groupId>
+						<artifactId>lucene-queryparser</artifactId>
+						<version>9.2.0</version>
 		</dependency>
 
 		<dependency>

@@ -106,9 +106,9 @@
             div.innerHTML = `
               <div class="card tweet-group">
                 <div class="card-body">
-                  <p><strong>Username</strong>:  </p>
+                  <p><strong>Username</strong>:  ${tweetsJSON[i].username}</p>
                   <p><strong>Tweet</strong>: ${tweetsJSON[i].text}</p>
-                  <p><strong>Date</strong>:    </p>
+                  <p><strong>Date</strong>: ${tweetsJSON[i].date} ${tweetsJSON[i].time}</p>
                 </div>
               </div>
             `;

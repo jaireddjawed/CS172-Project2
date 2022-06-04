@@ -18,6 +18,10 @@
       margin-bottom: 10px;
     }
 
+    .tweet-group {
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
     .error {
       background-color: red;
       color: white;
@@ -43,10 +47,10 @@
         <button type="submit" class="btn btn-primary">Search</button>
       </div>
     </form>
-  </div>
 
-  <div class="tweets">
+    <div class="tweets">
     
+    </div>
   </div>
 
   <script>
@@ -85,7 +89,15 @@
           const divTweets = document.getElementsByClassName("tweets")[0];
           for (let i = 0; i < tweetsJSON.length; i++) {
             const div = document.createElement("div");
-            div.innerHTML = tweetsJSON[i].text;
+            div.innerHTML = `
+              <div class="card tweet-group">
+                <div class="card-body">
+                  <p><strong>Username</strong>:  </p>
+                  <p><strong>Tweet</strong>: ${tweetsJSON[i].text}</p>
+                  <p><strong>Date</strong>:    </p>
+                </div>
+              </div>
+            `;
             divTweets.appendChild(div);
           }
         })

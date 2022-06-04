@@ -66,12 +66,12 @@
 
       // make a fetch request here to search for tweets
       fetch(`/api/tweets/?query=${searchText}`)
-        .then(res => {
+        .then(async res => {
           if (res.ok) {
-            return res.text();
+            return res.json();
           }
 
-          throw new Error('Internal Server Error');
+          throw new Error('Network response was not ok.');
         })
         .then(tweets => {
           console.log(tweets);

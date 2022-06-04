@@ -3,14 +3,17 @@ package com.example.demo;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.util.HashMap;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -34,6 +37,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 
 
 @RestController
+@ResponseBody
 @RequestMapping("/api")
 @CrossOrigin("*")
 public class TweetController {
@@ -83,6 +87,10 @@ public class TweetController {
 
     @RequestMapping("/tweets")
     public String index(@RequestParam(required = false, defaultValue = "") String query) throws ParseException, IOException {
+        if (query.isEmpty()) {
+            return "No query provided.";
+        }
+
         String[] fields = {"text"};
 
         tweetIndexDirectory = FSDirectory.open(FileSystems.getDefault().getPath("./", "index"));
@@ -100,12 +108,15 @@ public class TweetController {
 
         var hits = indexSearcher.search(myQuery, 10);
 
-        if (query.isEmpty()) {
-            return "No query provided.";
+        String response = "";
+
+        for (int i = 0; i < hits.scoreDocs.length; i++) {
+            Document hitDoc = indexSearcher.doc(hits.scoreDocs[i].doc);
+            response += hitDoc.get("text") + "\n";
         }
 
-        System.out.println("Found " + hits.totalHits + " tweets.");
+        System.out.println(response);
 
-        return "Hello Spring Boot!";
+        return response;
     }
 }

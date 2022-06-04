@@ -66,7 +66,7 @@ public class TweetController {
 
         tweetIndexer = new IndexWriter(tweetIndexDirectory, config);
 
-        //tweetIndexer.deleteAll();
+        tweetIndexer.deleteAll();
 
         // HashMap<String, Float> boosts = new HashMap<String, Float>();
         // boosts.put(fields[0], 2.0f);

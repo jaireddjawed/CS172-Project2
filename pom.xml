@@ -45,17 +45,31 @@
 				<version>9.2.0</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-codecs</artifactId>
+			<version>9.2.0</version>
+			<scope>test</scope>
+		</dependency>
+
+
 		<!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-queryparser -->
 		<dependency>
 				<groupId>org.apache.lucene</groupId>
 				<artifactId>lucene-queryparser</artifactId>
-				<version>8.11.1</version>
+				<version>9.2.0</version>
 		</dependency>
 
 		<dependency>
 				<groupId>com.googlecode.json-simple</groupId>
 				<artifactId>json-simple</artifactId>
 				<version>1.1.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20201115</version>
 		</dependency>
 
 	</dependencies>

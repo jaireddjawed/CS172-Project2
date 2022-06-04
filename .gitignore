@@ -32,3 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 index/
+
+# tweet file
+tweets_1_with_titles.json

@@ -12,6 +12,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 
+import java.util.Locale;
+
+import java.util.HashMap;
+
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.time.Instant;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
@@ -26,11 +35,16 @@ import org.json.simple.JSONObject;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.DateTools;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.search.ScoreDoc;
 
 
 @RestController
@@ -51,6 +65,13 @@ public class TweetController {
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
 
         tweetIndexer = new IndexWriter(tweetIndexDirectory, config);
+
+        //tweetIndexer.deleteAll();
+
+        // HashMap<String, Float> boosts = new HashMap<String, Float>();
+        // boosts.put(fields[0], 2.0f);
+        // boosts.put(fields[1], 1.0f);
+        // MultiFieldQueryParser parser = new MultiFieldQueryParser(fields, analyzer, boosts);
 
         JSONParser parser = new JSONParser();
         System.out.println("Loading tweets to Lucene...");
@@ -73,7 +94,45 @@ public class TweetController {
                 // adding tweet text for now, we can add other fields like username, etc.
                 Document tweetDoc = new Document();
                 tweetDoc.add(new Field("text", tweetData.get("text").toString(), TextField.TYPE_STORED));
+
+                // Formats the date
+                // Format: DD/MM/YYYY, HH:MM
+                // 26/05/2022, 13:24
+                String tweetDate = tweetData.get("created_at").toString();
+                Instant instantDate = Instant.parse(tweetDate);
+                DateTimeFormatter format = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(Locale.UK).withZone(ZoneId.systemDefault());
+                String dateTime = format.format(instantDate);
+                
+                // Splits into date and time
+                String[] dateTimeSplit = dateTime.split(", ", 2);
+                String date = dateTimeSplit[0];
+                String time = dateTimeSplit[1];
+                tweetDoc.add(new StringField("date", date, Field.Store.YES));
+                tweetDoc.add(new StringField("time", time, Field.Store.YES));
+                
+                // Adds username
+                JSONObject tweetIncludes = (JSONObject) tweet.get("includes");
+                JSONArray users = (JSONArray) tweetIncludes.get("users");
+                JSONObject user = (JSONObject) users.get(0);
+                String username = user.get("username").toString();
+                tweetDoc.add(new StringField("username", username, Field.Store.YES));
+
+                // Adds link titles
+                if (user.containsKey("entities")) {
+                    JSONObject entities = (JSONObject) user.get("entities");
+                    if (entities.containsKey("url")) {
+                        JSONObject url = (JSONObject) entities.get("url");
+                        JSONArray urls = (JSONArray) url.get("urls");
+                        JSONObject firstUrl = (JSONObject) urls.get(0);
+                        if (firstUrl.containsKey("title")) {
+                            String title = firstUrl.get("title").toString();
+                            tweetDoc.add(new StringField("link", title, Field.Store.YES));
+                        }
+                    }
+                }
+
                 tweetIndexer.addDocument(tweetDoc);
+
             }
         }
 
@@ -82,8 +141,8 @@ public class TweetController {
     }
 
     @RequestMapping("/tweets")
-    public String index(@RequestParam(required = false, defaultValue = "") String query) throws ParseException, IOException {
-        String[] fields = {"text"};
+    public JSONArray index(@RequestParam(required = false, defaultValue = "") String query) throws ParseException, IOException {
+        String[] fields = {"text","link"};
 
         tweetIndexDirectory = FSDirectory.open(FileSystems.getDefault().getPath("./", "index"));
 
@@ -91,21 +150,31 @@ public class TweetController {
 
         IndexSearcher indexSearcher = new IndexSearcher(reader);
 
-
         StandardAnalyzer analyzer = new StandardAnalyzer();
         MultiFieldQueryParser parser = new MultiFieldQueryParser(fields, analyzer);
+
+        JSONArray docList = new JSONArray();
+
+        if (query.isEmpty()) {
+            return docList;
+        }
+
         Query myQuery = parser.parse(query);
 
         System.out.println(myQuery);
 
         var hits = indexSearcher.search(myQuery, 10);
 
-        if (query.isEmpty()) {
-            return "No query provided.";
+        ScoreDoc[] docs = hits.scoreDocs;
+        
+        for (int i = 0; i < docs.length; i++) {
+            JSONObject docJSON = new JSONObject();
+            docJSON.put("text", indexSearcher.doc(docs[i].doc).getField("text").stringValue());
+            docList.add(docJSON);
         }
-
+        
         System.out.println("Found " + hits.totalHits + " tweets.");
 
-        return "Hello Spring Boot!";
+        return docList;
     }
 }

@@ -45,6 +45,9 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.similarities.BM25Similarity;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.ScoreDoc;
 
 
 @RestController
@@ -66,7 +69,7 @@ public class TweetController {
 
         tweetIndexer = new IndexWriter(tweetIndexDirectory, config);
 
-        //tweetIndexer.deleteAll();
+        tweetIndexer.deleteAll();
 
         // HashMap<String, Float> boosts = new HashMap<String, Float>();
         // boosts.put(fields[0], 2.0f);
@@ -142,16 +145,23 @@ public class TweetController {
 
     @RequestMapping("/tweets")
     public JSONArray index(@RequestParam(required = false, defaultValue = "") String query) throws ParseException, IOException {
-        String[] fields = {"text","link"};
+        String[] fields = {"text","username", "date", "time", "link"};
+        HashMap<String, Float> boosts = new HashMap<String, Float>();
+        boosts.put(fields[0], 2.5f); //text; can change the boost number
+        boosts.put(fields[1], 2.0f); //username; can change the boost number
+        boosts.put(fields[2], 1.0f); //date; shouldn't be boosted
+        boosts.put(fields[3], 1.0f); //time; shouldn't be boosted
+        boosts.put(fields[4], 1.5f); //title;
 
         tweetIndexDirectory = FSDirectory.open(FileSystems.getDefault().getPath("./", "index"));
 
         IndexReader reader = DirectoryReader.open(tweetIndexDirectory);
 
         IndexSearcher indexSearcher = new IndexSearcher(reader);
+        indexSearcher.setSimilarity(new BM25Similarity());
 
         StandardAnalyzer analyzer = new StandardAnalyzer();
-        MultiFieldQueryParser parser = new MultiFieldQueryParser(fields, analyzer);
+        MultiFieldQueryParser parser = new MultiFieldQueryParser(fields, analyzer, boosts);
 
         JSONArray docList = new JSONArray();
 
@@ -163,13 +173,29 @@ public class TweetController {
 
         System.out.println(myQuery);
 
-        var hits = indexSearcher.search(myQuery, 10);
+        //var hits = indexSearcher.search(myQuery, 10);
+        TopDocs hits = indexSearcher.search(myQuery, 10);
+
+        for(ScoreDoc scoreDoc : hits.scoreDocs){
+            Document doc = indexSearcher.doc(scoreDoc.doc);
+            System.out.println(doc.get("text"));
+            System.out.println(doc.get("username"));
+            System.out.println(doc.get("link"));
+            System.out.println(doc.get("date"));
+            System.out.println(doc.get("time") + "\n");
+        }
 
         ScoreDoc[] docs = hits.scoreDocs;
         
         for (int i = 0; i < docs.length; i++) {
             JSONObject docJSON = new JSONObject();
             docJSON.put("text", indexSearcher.doc(docs[i].doc).getField("text").stringValue());
+            docJSON.put("username", indexSearcher.doc(docs[i].doc).getField("username").stringValue());
+            if(indexSearcher.doc(docs[i].doc).getField("title") != null){
+                docJSON.put("title", indexSearcher.doc(docs[i].doc).getField("title").stringValue());
+            }
+            docJSON.put("date", indexSearcher.doc(docs[i].doc).getField("date").stringValue());
+            docJSON.put("time", indexSearcher.doc(docs[i].doc).getField("time").stringValue());
             docList.add(docJSON);
         }
         

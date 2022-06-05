@@ -58,7 +58,7 @@ public class TweetController {
     //
     IndexWriter tweetIndexer;
     // todo: change this to the number of tweet files you have in the tweets folder
-    static int numTweetFiles = 5;
+    static int numTweetFiles = 65;
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadTweets() throws FileNotFoundException, IOException, org.json.simple.parser.ParseException {
